@@ -7,3 +7,12 @@
 %              aqi:
 %          feature:{cell}
 function data = feature_hist(indata,interval)
+data = [];
+data.num = length(indata.im);
+data.im = indata.im;
+data.aqi = indata.aqi;
+data.calss = indata.class;
+data.feature = cell(data.num,1);
+for i = 1:data.num
+    data.feature{i} = hist(indata.feature{i},interval);
+end
