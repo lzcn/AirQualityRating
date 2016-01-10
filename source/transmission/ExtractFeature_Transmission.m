@@ -39,15 +39,13 @@ feature_file_path = fullfile(feature_folder,feature_file);
 fprintf('>>Computing transimission...\n');
 fprintf('>>Dealing with    0/%4d',dataset.num);
 file = fopen(feature_file_path,'wb');% saving the vector of features
-xvalues = 0:0.02:1;
 for i = 1:dataset.num
      fprintf('\b\b\b\b\b\b\b\b\b');
      fprintf('%4d/%4d',i,dataset.num);
      Transmission = GetTransmission(imread(dataset.path{i}));
-     [counts,~] = hist(Transmission(:),xvalues);
      fprintf(file,'%s\n%d\n',dataset.path{i},dataset.aqi(i));
-     for j = 1:size(counts,2)
-         fprintf(file,'%d ',counts(j));
+     for j = 1:numel(Transmission)
+         fprintf(file,'%d ',Transmission(j));
      end
      fprintf(file,'\n'); 
      if SAVE_TRANSIMISSION_IMGAE
