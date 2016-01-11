@@ -37,15 +37,15 @@ fprintf('>>Computing Power Spectrum Slope...\n');
 fprintf('>>Dealing with   0/%4d',dataset.num);
 
 file = fopen(feature_file_path,'wb');% saving the vector of features
-xvalues = -10:0.4:10;
+
 for i = 1:dataset.num
      fprintf('\b\b\b\b\b\b\b\b\b');
      fprintf('%4d/%4d',i,dataset.num);
      pss = q_alpha(imread(dataset.path{i}));
-     q = hist(pss(:),xvalues);
+     
      fprintf(file,'%s\n%d\n',dataset.path{i},dataset.aqi(i));
-     for j = 1:length(q)
-         fprintf(file,'%2.5f ',q(j));
+     for j = 1:numel(pss)
+         fprintf(file,'%2.5f ',pss(j));
      end;
      fprintf(file,'\n');
      if SAVE_PSS_IMGAE
@@ -53,8 +53,8 @@ for i = 1:dataset.num
          if exist(pss_folder,'file')==0
              mkdir(pss_folder);
          end
-         pss_image = fullfile(pss_folder,dataset.name{i});
-         imwrite(pss,pss_image);
+         pss_image_path = fullfile(pss_folder,dataset.name{i});
+         imwrite(pss,pss_image_path);
      end
 end
 fclose all;
