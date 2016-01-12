@@ -41,7 +41,6 @@ file = fopen(feature_file_path,'wb');% saving the vector of features
 for i = 1:dataset.num
      fprintf('\b\b\b\b\b\b\b\b\b');
      fprintf('%4d/%4d',i,dataset.num);
-     im = rgb2gray(imread(dataset.path{i}));
      pss = LocalPowerSpectrumSlope(im,17);
      fprintf(file,'%s\n%d\n',dataset.path{i},dataset.aqi(i));
      for j = 1:numel(pss)
