@@ -36,15 +36,13 @@ feature_file_path = fullfile(feature_folder,feature_file);
 fprintf('>>Computing saturation...\n');
 fprintf('>>Dealing with   0/%4d',dataset.num);
 file = fopen(feature_file_path,'wb');% saving the vector of features
-xvalues = 0:0.01:0.5;
 for i = 1:dataset.num
      fprintf('\b\b\b\b\b\b\b\b\b');
      fprintf('%4d/%4d',i,dataset.num);
      satu = NormedSatu(imread(dataset.path{i}));
-     [count,~]= hist(satu(:),xvalues);
      fprintf(file,'%s\n%d\n',dataset.path{i},dataset.aqi(i));
-     for j = 1:length(count)
-         fprintf(file,'%2.5f ',count(j));
+     for j = 1:numel(satu)
+         fprintf(file,'%2.5f ',satu(j));
      end;
      fprintf(file,'\n');
      if SAVE_SATURATION_IMGAE
@@ -53,7 +51,10 @@ for i = 1:dataset.num
              mkdir(saturation_folder);
          end;
          saturation_image = fullfile(saturation_folder,dataset.name{i});
-         imwrite(uint8(255.*satu),saturation_image);
+         MAXS = max(max(contrast));
+         MINS = min(min(contrast));
+         im_s = uint8((contrast - MINS)/(MAXS - MINS));
+         imwrite(im_s,saturation_image);
      end
 end
 fclose all;
