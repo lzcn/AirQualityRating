@@ -42,10 +42,10 @@ for i = 1:dataset.num
      fprintf('\b\b\b\b\b\b\b\b\b');
      fprintf('%4d/%4d',i,dataset.num);
      im = imread(dataset.path{i});
-     pss = LocalPowerSpectrumSlope(im,17);
+     q = LocalPowerSpectrumSlope(im,17);
      fprintf(file,'%s\n%d\n',dataset.path{i},dataset.aqi(i));
-     for j = 1:numel(pss)
-         fprintf(file,'%2.5f ',pss(j));
+     for j = 1:numel(q)
+         fprintf(file,'%2.5f ',q(j));
      end;
      fprintf(file,'\n');
      if SAVE_PSS_IMGAE
@@ -54,7 +54,10 @@ for i = 1:dataset.num
              mkdir(pss_folder);
          end
          pss_image_path = fullfile(pss_folder,dataset.name{i});
-         imwrite(pss,pss_image_path);
+         MAXQ = max(max(q));
+         MINQ = min(min(q));
+         im_q = uint8((q - MINQ)/(MAXQ - MINQ));
+         imwrite(im_q,pss_image_path);
      end
 end
 fclose all;
