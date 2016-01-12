@@ -37,18 +37,14 @@ fprintf('>>Computing contrast...\n');
 fprintf('>>Dealing with   0/%4d',dataset.num);
 
 file = fopen(feature_file_path,'wb');% saving the vector of features
-xvalues = 0:5:250;
 for i = 1:dataset.num
      fprintf('\b\b\b\b\b\b\b\b\b');
      fprintf('%4d/%4d',i,dataset.num);
      im = imread(dataset.path{i});
-     C = Contrast(im);
-     [m,n,~]=size(im);
-     [contrast_hist,~] = hist(C(:),xvalues);
-     contrast_hist = contrast_hist/(m*n);
+     contrast = Contrast(im);
      fprintf(file,'%s\n%d\n',dataset.path{i},dataset.aqi(i));
-     for j = 1:length(contrast_hist)
-         fprintf(file,'%1.6f ',contrast_hist(j));
+     for j = 1:nemul(contrast)
+         fprintf(file,'%1.6f ',contrast(j));
      end;
      fprintf(file,'\n');
      if SAVE_CONTRAST_IMGAE
@@ -57,7 +53,10 @@ for i = 1:dataset.num
              mkdir(contrast_folder);
          end
          contrast_image = fullfile(contrast_folder,dataset.name{i});
-         imwrite(uint8(C),contrast_image);
+         MAXC = max(max(contrast));
+         MINC = min(min(contrast));
+         im_c = uint8((contrast - MINC)/(MAXC - MINC));
+         imwrite(uint8(im_c),contrast_image);
      end
 end
 fclose all;
