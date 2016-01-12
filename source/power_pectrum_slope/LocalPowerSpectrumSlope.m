@@ -28,7 +28,7 @@ lsf_g = GenerateSf(im,lf_g,lC_g,size(im,1)/2,size(im,2)/2);
 lsf_new_g = rearrange(lC_log_g, lC_log_new_g, lsf_g);
 lsf_new_g = log(lsf_new_g(1:end-1));
 idx = ~(isnan(lsf_new_g) + isinf(lsf_new_g));   
-alf_local_g = sum(lsf_new_g(idx))/numel(lsf_new_g(idx));
+alf_global = sum(lsf_new_g(idx))/numel(lsf_new_g(idx));
 % local pss
 offset = (patchsize - 1)/2;
 [lf, lC] = GenerateF(offset, offset);
@@ -48,7 +48,7 @@ parfor i = 1:size(im_col,2)
 end
 q = reshape(q, [im_height-patchsize+1, im_width-patchsize+1]);
 q = padarray(q, [offset, offset], 'replicate');
-q = (q - alf_local_g)/alf_local_g;
+q = (q - alf_global)/alf_global;
 
 
 function [f, C] = GenerateF(height, width)
