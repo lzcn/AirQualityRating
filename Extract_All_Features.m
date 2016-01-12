@@ -10,9 +10,10 @@ ExtractFeature_contrast(Train_dataset,'train_contrast_origin',flag);
 ExtractFeature_satu(Train_dataset,'train_saturation_origin',flag);
 %% generate interval fo hist and rewrite the feature file
 interval = cell(length(origin_train),1);
-file_dir = fullfile('source',folder,Features);
+% the directory storing the feature files
+feature_file_dir = fullfile('source',folder,'Features');
 for kk =1:length(origin_train)
-    feature_file_name = fullfile(file_dir,origin_train{kk});
+    feature_file_name = fullfile(feature_file_dir,origin_train{kk});
     indata = readmydata(feature_file_name);
     interval{kk} = interval_for_hist(indata,50);
     dataset = feature_hist(indata,interval{kk});
@@ -39,7 +40,7 @@ ExtractFeature_satu(Test_dataset,'test_saturation_origin',flag);
 %% Rewrite the test feature file
 origin_test = {'test_transmission_origin','test_pss_origin','test_contrast_origin','test_saturation_origin'};
 for kk =1:length(origin_test)
-    feature_file_name = fullfile(file_dir,origin_test{kk});
+    feature_file_name = fullfile(feature_file_dir,origin_test{kk});
     indata = readmydata(feature_file_name);
     interval{kk} = interval_for_hist(indata,50);
     dataset = feature_hist(indata,interval{kk});
