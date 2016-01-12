@@ -15,8 +15,21 @@
 %   Copyright 2014, The Chinese University of Hong Kong.
 
 function q = LocalPowerSpectrumSlope(im, patchsize)
+if size(im,3) ==3
+    im = rgb2gray(im);
+end
+im = im2double(im);
 [im_height, im_width] = size(im);
-
+% global pss 
+[lf_g,lC_g] = GenerateF(size(im,1)/2,size(im,2)/2);
+lC_log_g = log(lC_g);
+lC_log_new_g = unique(round(lC_log_g / 0.2)*0.2);
+lsf_g = GenerateSf(im,lf_g,lC_g,size(im,1)/2,size(im,2)/2);
+lsf_new_g = rearrange(lC_log_g, lC_log_new_g, lsf_g);
+lsf_new_g = log(lsf_new_g(1:end-1));
+idx = ~(isnan(lsf_new_g) + isinf(lsf_new_g));   
+alf_local_g = sum(lsf_new_g(idx))/numel(lsf_new_g(idx));
+% local pss
 offset = (patchsize - 1)/2;
 [lf, lC] = GenerateF(offset, offset);
 lC_log = log(lC);
@@ -30,11 +43,12 @@ parfor i = 1:size(im_col,2)
     lsf_new = rearrange(lC_log, lC_log_new, lsf);
     lsf_new = log(lsf_new(1:end-1));
     idx = ~(isnan(lsf_new) + isinf(lsf_new));   
-    alf_local = sum(lsf_new(idx))
+    alf_local = sum(lsf_new(idx))/numel(lsf_new(idx));
     q(i) = alf_local;
 end
 q = reshape(q, [im_height-patchsize+1, im_width-patchsize+1]);
 q = padarray(q, [offset, offset], 'replicate');
+q = (q - alf_local_g)/alf_local_g;
 
 
 function [f, C] = GenerateF(height, width)
@@ -47,10 +61,11 @@ C = unique(f);
 
 % Power Spectrum Slope
 function sf=GenerateSf(im, f, C, half_height, half_width)
-[height width] = size(im);
+[height,width] = size(im);
 s = abs(fft2(im, height, width));
 s = s(1:half_height,1:half_width).^2/half_height/half_width;
 sf = calculateSf(s, C, f);
+
 
 function data = rearrange(C, C_new, f)
 data = zeros(size(C_new));
