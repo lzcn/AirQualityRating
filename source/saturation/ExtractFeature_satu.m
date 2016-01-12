@@ -39,7 +39,7 @@ file = fopen(feature_file_path,'wb');% saving the vector of features
 for i = 1:dataset.num
      fprintf('\b\b\b\b\b\b\b\b\b');
      fprintf('%4d/%4d',i,dataset.num);
-     satu = NormedSatu(imread(dataset.path{i}));
+     satu = LocalSaturation(imread(dataset.path{i}));
      fprintf(file,'%s\n%d\n',dataset.path{i},dataset.aqi(i));
      for j = 1:numel(satu)
          fprintf(file,'%2.5f ',satu(j));
@@ -51,9 +51,9 @@ for i = 1:dataset.num
              mkdir(saturation_folder);
          end;
          saturation_image = fullfile(saturation_folder,dataset.name{i});
-         MAXS = max(max(contrast));
-         MINS = min(min(contrast));
-         im_s = uint8((contrast - MINS)/(MAXS - MINS));
+         MaxValue = max(max(satu));
+         MinValue = min(min(satu));
+         im_s = uint8(255*(satu - MinValue)/(MaxValue - MinValue));
          imwrite(im_s,saturation_image);
      end
 end

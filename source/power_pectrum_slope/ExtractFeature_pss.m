@@ -17,7 +17,7 @@ if (nargin == 4 && flag == 1)
     SAVE_PSS_IMGAE = true; 
 elseif (nargin == 3 && flag == 1)
     SAVE_PSS_IMGAE = true;
-    pss_file_name = 'Contrast';
+    pss_file_name = 'PorwerSpectrumSlope';
 elseif (nargin == 2)
     SAVE_PSS_IMGAE = false;
 end
@@ -54,9 +54,9 @@ for i = 1:dataset.num
              mkdir(pss_folder);
          end
          pss_image_path = fullfile(pss_folder,dataset.name{i});
-         MAXQ = max(max(q));
-         MINQ = min(min(q));
-         im_q = uint8((q - MINQ)/(MAXQ - MINQ));
+         MaxValue = max(max(q));
+         MinValue = min(min(q));
+         im_q = uint8(255*(q - MinValue)/(MaxValue - MinValue));
          imwrite(im_q,pss_image_path);
      end
 end

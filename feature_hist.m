@@ -3,13 +3,13 @@
 % then using the intervals to histogram every vectors to k dimensions
 % input :
 %    data(indata):
-%              im:{cell}
+%              path:{cell}
 %              aqi:
 %          feature:{cell}
 function data = feature_hist(indata,interval)
 data = [];
-data.num = length(indata.im);
-data.im = indata.im;
+data.num = length(indata.path);
+data.path = indata.path;
 data.aqi = indata.aqi;
 data.feature = cell(data.num,1);
 for i = 1:data.num

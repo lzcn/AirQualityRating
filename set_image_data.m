@@ -14,8 +14,8 @@ end
 root = './data/';
 rt_data_dir = fullfile(root,folder,data_dir);
 if ~isdir(rt_data_dir)
-    fprintf('No folder named %s exist!\n',folder);
-    return ;
+    fprintf('No folder named ''%s''!\n',folder);
+    database = -1; return
 end
 images = dir(fullfile(rt_data_dir,suffix));     
 % information for database

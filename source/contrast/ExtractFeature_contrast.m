@@ -43,7 +43,7 @@ for i = 1:dataset.num
      im = imread(dataset.path{i});
      contrast = Contrast(im);
      fprintf(file,'%s\n%d\n',dataset.path{i},dataset.aqi(i));
-     for j = 1:nemul(contrast)
+     for j = 1:numel(contrast)
          fprintf(file,'%1.6f ',contrast(j));
      end;
      fprintf(file,'\n');
@@ -53,9 +53,9 @@ for i = 1:dataset.num
              mkdir(contrast_folder);
          end
          contrast_image = fullfile(contrast_folder,dataset.name{i});
-         MAXC = max(max(contrast));
-         MINC = min(min(contrast));
-         im_c = uint8((contrast - MINC)/(MAXC - MINC));
+         MaxValue = max(max(contrast));
+         MinValue = min(min(contrast));
+         im_c = uint8(255*(contrast - MinValue)/(MaxValue - MinValue));
          imwrite(uint8(im_c),contrast_image);
      end
 end
