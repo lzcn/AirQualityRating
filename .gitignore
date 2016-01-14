@@ -19,3 +19,5 @@ slprj/
 *.jpg
 # Remove feature file
 *.out
+# Remove sublime project
+*.sublime*
