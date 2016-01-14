@@ -16,3 +16,5 @@
 slprj/
 ## Remove Image
 *.jpg
+
+*.out

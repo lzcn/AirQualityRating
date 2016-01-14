@@ -12,25 +12,22 @@
 %       'FeatureFile':file name which will be saved under directory 'Features'
 %  
 %
-function ExtractFeature_contrast(dataset,feature_file,flag,contrast_file_name)
-if (nargin == 4 && flag == 1)
+function ExtractFeature_contrast(dataset,out_folder,feature_file,flag,contrast_file_name)
+if (nargin == 5 && flag == 1)
     SAVE_CONTRAST_IMGAE = true; 
-elseif (nargin == 3 && flag == 1)
+elseif (nargin == 4 && flag == 1)
     SAVE_CONTRAST_IMGAE = true;
     contrast_file_name = 'Contrast';
-elseif (nargin == 2)
+elseif (nargin == 3)
     SAVE_CONTRAST_IMGAE = false;
 end
 
-outfolder = fullfile('result',dataset.folder);
-% the directory to save features
-feature_folder = fullfile(outfolder,'Features');
 
-if exist(feature_folder,'file')==0 
-             mkdir(feature_folder);
+if exist(out_folder,'file')==0 
+             mkdir(out_folder);
 end;
 % the name of feature file 
-feature_file_path = fullfile(feature_folder,feature_file);
+feature_file_path = fullfile(out_folder,feature_file);
 
 %% Compute Power Spectrum Slope
 fprintf('>>Computing contrast...\n');
@@ -48,7 +45,7 @@ for i = 1:dataset.num
      end;
      fprintf(file,'\n');
      if SAVE_CONTRAST_IMGAE
-         contrast_folder = fullfile(outfolder,contrast_file_name);
+         contrast_folder = fullfile(out_folder,contrast_file_name);
          if exist(contrast_folder,'file') == 0
              mkdir(contrast_folder);
          end

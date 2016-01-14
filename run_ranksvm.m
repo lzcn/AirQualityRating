@@ -1,53 +1,38 @@
-clc;clear all;close all;
-%% Extract feature
 addpath(genpath('source'));
+bin = '.\bin';
+file_dir = '.\data\DATA_100';
+out_dir = '.\result\DATA_100';
+%% Extract feature
 disp('Extracting features!');
-Extract_All_Features('DATA_200',1);
+feature_func = {'ExtractFeature_Transmission', ...
+                'ExtractFeature_contrast', ...
+                'ExtractFeature_satu',...
+                'ExtractFeature_pss'};
+feature_file = {'transmission.out',...
+                'contrast.out',...
+                'saturation.out',...
+                'PowerSpectrumSlope.out'};
+feature_path = Extract_All_Features(file_dir,...
+                           1,...
+                           feature_func,...
+                           out_dir,...
+                           feature_file);
+%% change data format
 disp('Changing the data format for ranksvm');
-format2rank('train','test');
-
+format2rank(out_dir,...
+            feature_path{1},...
+            'train.out',...
+            feature_path{2},...
+            'test.out');
 %% using rank SVM
-
-% scale the data
-disp('Scale Phase!');
-command = '!svm-scale -l -1 -u 1 -s  range train > train_rank.scale';
-eval(command);
-command = '!svm-scale -l -1 -u 1 -s  range test > test_rank.scale';
-eval(command);
-% train
-disp('Train Phase!');
-pairwise_accuracy = zeros(180,1);
-arguments = cell(180,1);
-idx = 1;
-for i = 1:5
-    for j = 1:6
-        for k = 1:6
-            c = 2^i - 1;
-            g = 2^(-j);
-            e = 2^(-k);
-            A = [c g e];
-            arguments{idx} = A;
-            Nc = ['-c ',num2str(c),' '];
-            Ng = ['-g ',num2str(g),' '];
-            Ne = ['-e ',num2str(e),' '];
-            command = ['!svm-train -s 5 ',Nc,' -t 2 ',Ng,Ne,'train_rank.scale '];
-            evalc(command);
-            % predict
-            command = '!svm-predict  test_rank.scale train_rank.scale.model test_rank.scale.result';
-            Result = evalc(command)
-            pairwise_accuracy(idx) = str2double(Result(20:27));
-            idx = idx + 1;
-        end
-    end
-end
-disp('done rank svm!');
-[pairwise_accuracy,p_idx] = max(pairwise_accuracy);
-file = fopen('Result.txt','wb');
-disp('Best Rank Arguments');
-disp(pairwise_accuracy);
-disp(arguments{p_idx});
-fprintf(file,'Best Rank Arguments\n');
-fprintf(file,'%f\n',arguments{p_idx});
-fprintf(file,'%s\n','Accuracy');
-fprintf(file,'%f\n',pairwise_accuracy);
-fclose(file);
+train_filename = fullfile(out_dir,'train.out');
+test_filename = fullfile(out_dir,'test.out');
+[best_c,best_g,best_rate] = find_parameters('svm_type',5,...
+                                            'c_range',[-5 15],...
+                                            'c_step',2,...
+                                            'g_range',[3 -15],...
+                                            'g_step',-2,...
+                                            'fold',5,...
+                                            'train_filename',train_filename,...
+                                            'test_filename',test_filename,...
+                                            'svm_path','.\bin');

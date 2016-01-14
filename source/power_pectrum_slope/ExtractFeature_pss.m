@@ -12,25 +12,21 @@
 %       'FeatureFile':file name which will be saved under directory 'Features'
 %  
 %
-function ExtractFeature_pss(dataset,feature_file,flag,pss_file_name)
-if (nargin == 4 && flag == 1)
+function ExtractFeature_pss(dataset,out_folder,feature_file,flag,pss_file_name)
+if (nargin == 5 && flag == 1)
     SAVE_PSS_IMGAE = true; 
-elseif (nargin == 3 && flag == 1)
+elseif (nargin == 4 && flag == 1)
     SAVE_PSS_IMGAE = true;
     pss_file_name = 'PorwerSpectrumSlope';
-elseif (nargin == 2)
+elseif (nargin == 3)
     SAVE_PSS_IMGAE = false;
 end
 
-outfolder = fullfile('result',dataset.folder);
-% the directory to save features
-feature_folder = fullfile(outfolder,'Features');
-
-if exist(feature_folder,'file')==0 
-             mkdir(feature_folder);
+if exist(out_folder,'file')==0 
+             mkdir(out_folder);
 end;
 % the name of feature file 
-feature_file_path = fullfile(feature_folder,feature_file);
+feature_file_path = fullfile(out_folder,feature_file);
 
 %% Compute Power Spectrum Slope
 fprintf('>>Computing Power Spectrum Slope...\n');
@@ -49,7 +45,7 @@ for i = 1:dataset.num
      end;
      fprintf(file,'\n');
      if SAVE_PSS_IMGAE
-         pss_folder = fullfile(outfolder,pss_file_name);
+         pss_folder = fullfile(out_folder,pss_file_name);
          if exist(pss_folder,'file')==0
              mkdir(pss_folder);
          end

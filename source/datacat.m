@@ -23,7 +23,7 @@ f_idx = 1;
 for i = 1 : ll
     for j = 1:indata{i}.num
         if i == 1
-            odata.im{j} = indata{1}.im{j};
+            odata.path{j} = indata{1}.path{j};
             odata.aqi(j) = indata{1}.aqi(j);
         end
         odata.feature{j}(f_idx:sum(f_v(1:i))) = indata{i}.feature{j};
