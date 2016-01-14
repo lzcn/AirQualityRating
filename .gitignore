@@ -11,10 +11,11 @@
 
 # Compiled MEX binaries (all platforms)
 *.mex*
-
+#
+.gitignore~
 # Simulink Code Generation
 slprj/
-## Remove Image
+# Remove Image
 *.jpg
-
+# Remove feature file
 *.out
