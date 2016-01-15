@@ -1,7 +1,7 @@
 addpath(genpath('source'));
 bin = '.\bin';
-file_dir = '.\data\DATA_100';
-out_dir = '.\result\DATA_100';
+file_dir = '.\data\DATA_200';
+out_dir = '.\result\DATA_200';
 %% Extract feature
 disp('Extracting features!');
 feature_func = {'ExtractFeature_Transmission', ...

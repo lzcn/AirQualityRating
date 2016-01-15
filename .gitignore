@@ -16,5 +16,7 @@
 slprj/
 ## Remove Image
 *.jpg
-
+#
 *.out
+# sublime project
+*.sublime*
