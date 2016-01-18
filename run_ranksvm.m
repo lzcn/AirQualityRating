@@ -1,7 +1,7 @@
 addpath(genpath('source'));
 bin = '.\bin';
-file_dir = '.\data\DATA_200';
-out_dir = '.\result\DATA_200';
+file_dir = '.\data\DATA_100';
+out_dir = '.\result\DATA_100';
 %% Extract feature
 disp('Extracting features!');
 feature_func = {'ExtractFeature_Transmission', ...
@@ -36,3 +36,4 @@ test_filename = fullfile(out_dir,'test.out');
                                             'train_filename',train_filename,...
                                             'test_filename',test_filename,...
                                             'svm_path','.\bin');
+save('log');
