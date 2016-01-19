@@ -2,20 +2,27 @@
 % ExtractFeature_Transmission(dataset,FeatureFile,flag,TransmissionFile)
 % It will save the result in './result/folder/Features/feature_file_name
 % Input:
-%        dataset = see 'set_image_data.m'
+%        'dataset' = see 'set_image_data.m'
 %                           num:
 %                           path: {cell}
 %                           name:{cell}
 %                           aqi: []
 %                           class: []
 %                           folder:
+%       'out_folder': the folder saves feature files
 %
-%       'feature_file':file name which will be saved under directory 'Features'
-%  
+%       'feature_file':file name which will be saved under out_folder
+%
 %       'flag': using for saving the Transmission gray images
 %               if do saves in the directory 'TransmissionFile'
+%
 %       'transmission_file':The file name to store transmission images
-function  ExtractFeature_Transmission(dataset,out_folder,feature_file_name,flag,transmission_folder_name)
+%                           default:Transmission
+function  ExtractFeature_Transmission(dataset,...
+                                      out_folder,...
+                                      feature_file_name,...
+                                      flag,...
+                                      transmission_folder_name)
 % Extract Transimission  Feature for every image
 if (nargin == 5 && flag == 1)
     SAVE_TRANSIMISSION_IMGAE = true; 

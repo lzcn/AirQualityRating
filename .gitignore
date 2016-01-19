@@ -17,7 +17,10 @@
 slprj/
 # Remove Image
 *.jpg
-# Remove feature file
-*.out
+
 # Remove sublime project
 *.sublime*
+# Remove SVM relevanted file
+*.out*
+*.scale*
+*.model*

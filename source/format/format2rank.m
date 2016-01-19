@@ -15,7 +15,7 @@ if length(train_origin) ~= length(test_origin)
 else NumF = length(train_origin); 
 end
 
-filename =[train_origin;test_origin];
+filename =[train_origin;test_origin]
 data_origin = cell(2*NumF,1);
 for j = 1:2*NumF
     data_origin{j} = readmydata(filename{j});

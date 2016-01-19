@@ -1,7 +1,0 @@
-svm_type l2r_rank
-kernel_type rbf
-gamma 3.0518e-005
-nr_class 2
-total_sv 0
-rho 0
-SV
