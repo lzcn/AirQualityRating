@@ -17,7 +17,7 @@ function eaf = Extract_All_Features(img_dir,...
                                     out_dir,...
                                     prefix,...
                                     Sets,...
-                                    BINS)
+                                    BINS,...)
 %% extract the origin features
 if length(feature_func) ~= length(feature_file) || ...
    length(feature_func) ~= length(BINS)
@@ -36,9 +36,11 @@ for i = 1:length(Sets)
     eaf{i} = fullfile(out_dir,origin_feature);
     data_train_new = set_image_data(img_dir,Sets{i});
     fprintf('>> Extract %s''s Features\n',Sets{i});
-    for j = 1:length(feature_func)
+    parpool;
+    parfor j = 1:NumF
         feval(feature_func{j},data_train_new,out_dir,origin_feature{j},flag);
     end
+    delete(gcp);
 end
 
 %% generate intervals fo hist and rewrite the feature file
