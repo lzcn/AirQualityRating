@@ -16,10 +16,12 @@ function eaf = Extract_All_Features(img_dir,...
                                     feature_file,...
                                     out_dir,...
                                     prefix,...
-                                    Sets)
+                                    Sets,...
+                                    BINS)
 %% extract the origin features
-if length(feature_func) ~= length(feature_file)
-    fprintf('>> function''s length doesn''t matchs file''s\n');
+if length(feature_func) ~= length(feature_file) || ...
+   length(feature_func) ~= length(BINS)
+    fprintf('>> function''s , file''s and BINS''s lengths don''t macth\n');
     return;
 else NumF = length(feature_func);
 end
@@ -45,7 +47,7 @@ final_train_feature = fullfile(out_dir,strcat(prefix{1},feature_file(:)));
 final_test_feature = fullfile(out_dir,strcat(prefix{2},feature_file(:)));
 for n = 1:NumF
     data_train = readmydata(origin_train_feature{n});
-    interval = interval_for_hist(data_train,50);
+    interval = interval_for_hist(data_train,BINS(n));
     data_train_new = feature_hist(data_train,interval);
     fid_train = fopen(final_train_feature{n},'wb');
     for i = 1:data_train_new.num
