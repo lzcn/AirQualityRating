@@ -17,7 +17,8 @@
 slprj/
 # Remove Image
 *.jpg
-
+# perl
+*.pl
 # Remove sublime project
 *.sublime*
 # Remove SVM relevanted file
