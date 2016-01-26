@@ -17,7 +17,7 @@ function eaf = Extract_All_Features(img_dir,...
                                     out_dir,...
                                     prefix,...
                                     Sets,...
-                                    BINS,...)
+                                    BINS)
 %% extract the origin features
 if length(feature_func) ~= length(feature_file) || ...
    length(feature_func) ~= length(BINS)
@@ -30,24 +30,29 @@ if length(prefix) ~= length(Sets)
     return;
 end
 
-eaf = cell(length(Sets),1);
 for i = 1:length(Sets)
     origin_feature = strcat('origin_',prefix{i},feature_file(:));
-    eaf{i} = fullfile(out_dir,origin_feature);
     data_train_new = set_image_data(img_dir,Sets{i});
     fprintf('>> Extract %s''s Features\n',Sets{i});
     parpool;
-    parfor j = 1:NumF
+    parfor j = 1:NumF - 1
         feval(feature_func{j},data_train_new,out_dir,origin_feature{j},flag);
     end
     delete(gcp);
+    % Extract Feature Power Spectrum  Slope alone for it using parpool
+    feval(feature_func{NumF},data_train_new,out_dir,origin_feature{NumF},flag);
 end
 
 %% generate intervals fo hist and rewrite the feature file
 % the directory storing the feature files
 final_train_feature = fullfile(out_dir,strcat(prefix{1},feature_file(:)));
 final_test_feature = fullfile(out_dir,strcat(prefix{2},feature_file(:)));
-for n = 1:NumF
+origin_train_feature = fullfile(out_dir,strcat('origin_',prefix{1},feature_file(:)));
+origin_test_feature = fullfile(out_dir,strcat('origin_',prefix{2},feature_file(:)));
+eaf{1} = final_train_feature;
+eaf{2} = final_test_feature;
+parpool;
+parfor n = 1:NumF
     data_train = readmydata(origin_train_feature{n});
     interval = interval_for_hist(data_train,BINS(n));
     data_train_new = feature_hist(data_train,interval);
@@ -59,7 +64,7 @@ for n = 1:NumF
         end
         fprintf(fid_train,'\n');
     end
-    fclose(fid_train);clear data_train;
+    fclose(fid_train);
     data_test = readmydata(origin_test_feature{n});
     data_test_new = feature_hist(data_test,interval);
     fid_test = fopen(final_test_feature{n},'wb');
@@ -70,62 +75,10 @@ for n = 1:NumF
         end
         fprintf(fid_train,'\n');
     end
-    fclose(fid_test);clear data_test;
+    fclose(fid_test);
 end
+delete(gcp);
 disp('>>Done!');
 fprintf('\n');
 
-% using k means to cluster all elements of feature vector of all instances 
-% to k clusters and generate k intervals 
-% then using the intervals to histogram every vectors to k dimensions
-% input :
-%    data(indata):
-%              path:{cell}
-%              aqi:
-%          feature:{cell}
-function data = feature_hist(indata,interval)
-data = [];
-data.num = length(indata.path);
-data.path = indata.path;
-data.aqi = indata.aqi;
-data.feature = cell(data.num,1);
-for i = 1:data.num
-    data.feature{i} = hist(indata.feature{i},interval);
-end
 
-% using k means to cluster all elements of feature vector of all instances 
-% to k clusters and generate k intervals 
-% then using the intervals to histogram every vectors to k dimensions
-% input :
-%    data(indata):
-%              im:{cell}
-%              aqi:
-%          feature:{cell}
-%    k : k clusters
-% output : the interval for histogram
-function interval = interval_for_hist(indata,k)
-data = [];
-data.num = length(indata.path);
-data.path = cell(data.num,1);
-data.aqi = -ones(data.num,1);
-data.calss = -ones(data.num,1);
-data.feature = cell(data.num,1);
-% write all emelemt of features to a vector
-elem = [];
-for i = 1:10
-    elem = [elem;indata.feature{i}];
-end
-
-IDX = kmeans(elem,k);
-xvalues = zeros(2*k,1);
-for  j = 1:k
-    xvalues(2*j-1) = min(elem(find(IDX == j)));
-    xvalues(2*j) = max(elem(find(IDX == j)));
-end
-xvalues = sort(xvalues);
-% generate the interval
-interval = zeros(k+1,1);
-interval(1) = xvalues(1);
-for ii =1:k
-    interval(ii+1) = xvalues(2*ii);
-end

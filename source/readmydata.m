@@ -9,7 +9,6 @@ data.feature = cell(row/3,1);
 fid = fopen(file,'r');
 num = 1;
 while ~feof(fid)
-    
     % image information
     line = fgetl(fid);
     if ~isempty(line);
