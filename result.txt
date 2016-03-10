@@ -1,0 +1,2 @@
+Accuracy = 55.4913% (96/173) (classification)
+Pairwise Accuracy = 83.9479%
