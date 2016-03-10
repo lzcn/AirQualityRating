@@ -14,6 +14,7 @@ f_v_all = sum(f_v);
 
 odata.num = imnum;
 odata.aqi = zeros(1,imnum);
+odata.class = zeros(1,imnum);
 odata.im = cell(1,imnum);
 odata.feature = cell(1,imnum);
 for i = 1: imnum

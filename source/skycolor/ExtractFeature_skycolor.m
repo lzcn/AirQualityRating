@@ -1,0 +1,2 @@
+function ExtractFeature_skycolor(dataset,out_folder,feature_file,flag,contrast_file_name)
+	

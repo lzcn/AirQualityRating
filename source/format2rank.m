@@ -6,7 +6,7 @@
 %         test_old : files of origin test feature
 %         trast_file: the file saved test featrues
          
-function f = format2rank(file_dir,train_origin,train_file,test_origin,test_file)
+function f = format2rank(file_dir,train_origin,train_file,test_origin,test_file,format)
 
 if length(train_origin) ~= length(test_origin)
     f = -1;
@@ -15,7 +15,7 @@ if length(train_origin) ~= length(test_origin)
 else NumF = length(train_origin); 
 end
 
-filename =[train_origin;test_origin]
+filename =[train_origin;test_origin];
 data_origin = cell(2*NumF,1);
 for j = 1:2*NumF
     data_origin{j} = readmydata(filename{j});
@@ -26,7 +26,11 @@ for i = 1:2
     v_l = length(data_all.feature{1});
     fid = fopen(cate{i},'w');
     for m = 1:data_all.num
-        fprintf(fid,'%d ',data_all.aqi(m));
+        if strcmp(format,'RANKSVM') == 1
+            fprintf(fid,'%d ',data_all.aqi(m));
+        elseif strcmp(format,'CLASSSVM') == 1
+            fprintf(fid,'%d ',label2class(data_all.aqi(m)));
+        end
         for n = 1:v_l
             fprintf(fid,'%d:%d ',n,data_all.feature{m}(n));
         end
@@ -34,4 +38,3 @@ for i = 1:2
     end
     fclose(fid);
 end
-    

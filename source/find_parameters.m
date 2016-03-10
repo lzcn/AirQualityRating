@@ -45,12 +45,8 @@ cmdline = get_cmd('svm_path',svm_path,...
 
 eval(cmdline);
 % find paras
-x = meshgrid(c_range(1):c_step:c_range(2),g_range(1):g_step:g_range(2));
-y = meshgrid(g_range(1):g_step:g_range(2),c_range(1):c_step:c_range(2));
-z = zeros(length(y),length(x));
-m = 1;
+
 for i = c_range(1):c_step:c_range(2)
-    n = 1;
     for j = g_range(1):g_step:g_range(2)
         c_tmp =  2^i;
         g_tmp =  2^j;
@@ -71,27 +67,33 @@ for i = c_range(1):c_step:c_range(2)
                                   'output_file',output_file);
                 result = evalc(cmdline);
                 best_rate_new = str2double(result(20:27));
-                if ~isnan(best_rate_new)
-%                     line([i,i],[j,j],[0,round(best_rate_new)],'LineWidth',10,'Color',cmap(round(best_rate_new*2.55),:));
-                    z(n,m) = best_rate_new;
-                else
-                    z(n,m) = 0;
-                end
             case 0 % 
+                cmdline = get_cmd('svm_path',svm_path,...
+                                  'svm_bin','svm-train',...
+                                  'svm_type',svm_type,...
+                                  'c',c_tmp,'g',g_tmp,...
+                                  'fold',fold,...
+                                  'train_filename',train_scale,...
+                                  'model_file','train.scale.model');
+                result = evalc(cmdline);
+                idx = strfind(result,'Cross Validation Accuracy');
+                best_rate_new = str2double(result(idx+28:end-3));
             otherwise %
         end        
         if ~isnan(best_rate_new) && (best_rate_new > best_rate)
           best_rate = best_rate_new;
           best_c = c_tmp;
           best_g = g_tmp;
-        end   
-        m = m + 1;
+        end
     end
-    n = n + 1;
+%     model_file = strcat(train_scale,'.model');
+%     cmdline = get_cmd('svm_path',svm_path,...
+%                       'svm_bin','svm-predict',...
+%                       'test_filename',test_scale,...
+%                       'model_file',model_file,...
+%                       'output_file',output_file);
+%     evalc(cmdline);
 end
-meshc(x,y,z);
-
-
 
 
 function cmdline = get_cmd(varargin)
@@ -147,7 +149,8 @@ switch (svm_bin)
                         ' -c ',num2str(c),...
                         ' -g ',num2str(g),...
                         ' -v ',num2str(fold),...
-                        ' ',train_filename];
+                        ' ',train_filename,...
+                        ' ',model_file];
         elseif svm_type == 5
             cmdline = [ '!',fullfile(svm_path,svm_bin),...
                         ' -s ',num2str(svm_type)...
