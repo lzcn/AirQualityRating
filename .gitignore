@@ -25,3 +25,9 @@ slprj/
 *.out*
 *.scale*
 *.model*
+
+# pickle file
+*.pickle
+
+# txt file
+*.txt

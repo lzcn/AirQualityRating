@@ -1,5 +1,5 @@
 Left Images of Ex_1
-Image Number:172
+Image Number:171
 2014.04.09-232-very-unhealthy-624x468.jpg
 2013.12.31-154-unhealthy-624x468.jpg
 2015.04.28-127-unhealthy-for-sensitive-group-624x468.jpg
@@ -171,4 +171,3 @@ Image Number:172
 2013.10.31-183-unhealthy-624x468.jpg
 2014.06.27-57-moderate-624x468.jpg
 2014.06.10-165-unhealthy-624x468.jpg
-2015.04.08-173-unhealthy-624x468.jpg

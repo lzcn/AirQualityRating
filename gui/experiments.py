@@ -78,7 +78,7 @@ class Btn(QtGui.QPushButton):
 		self.BtnClicked.emit(self.__id)
 
 class ExofClass(QtGui.QWidget):  # inherit QtGui.QWidget
-	def __init__(self):
+	def __init__(self, folder):
 		super(ExofClass, self).__init__()
 		self.Images = ImageData('images')
 		# the current image  and label
@@ -218,7 +218,7 @@ class ExofClass(QtGui.QWidget):  # inherit QtGui.QWidget
   		return label
 
 class ExofComp(QtGui.QWidget):  # inherit QtGui.QWidget
-	def __init__(self):
+	def __init__(self, folder):
 		super(ExofComp, self).__init__()
 		self.Images = ImageData('images')
 		self.CompImagesNum = 2
