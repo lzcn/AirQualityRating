@@ -1,8 +1,8 @@
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
 import os
 import sys
 import random
-import shutil
-import numpy as np
 from PyQt4 import QtGui, QtCore
 
 try:
@@ -27,6 +27,8 @@ class ImageData(object):
 		imlist[]: image names(random permutation)
 		AQI[]: aqis for each iagme
 		CompPairInd[] : random pair index
+		if given the pairs.txt file  
+		load the pairs form pairs.txt
 	"""
 	def __init__(self, folder):
 		super(ImageData, self).__init__()
@@ -39,8 +41,9 @@ class ImageData(object):
 		self.Level = []
 		# the comparison pair of iagmes
 		self.CompPairInd = []
+		self.PairLenRatio = 0.015
 		# initialize the imlist and AQI
-		self.initParameters()
+		#self.initParameters()
 
 	def initParameters(self):
 		""" Initialize the parameters"""
@@ -51,6 +54,7 @@ class ImageData(object):
 		# Order disrupted
 		random.shuffle(self.imlist)
 		self.nImg = len(self.imlist)
+		self.PairLen = int(self.PairLenRatio*self.nImg)
 		self.AQI = []
 		for i in range(self.nImg):
 			# get aqis
@@ -58,12 +62,38 @@ class ImageData(object):
 			ind_second = self.imlist[i].find('-',ind_first+1)
 			aqi = int(self.imlist[i][ind_first+1:ind_second])
 			self.AQI.append(aqi)
-			self.Level.append(6 if aqi > 300 else aqi//50+1)
-		self.CompPairInd = [[i,j]\
-				for i in range(self.nImg)\
-				for j in range(self.nImg)\
-				if i != j]
-		random.shuffle(self.CompPairInd)
+			self.Level.append(self.Aqi2Level(aqi))
+		if os.path.exists('pairs.txt'):
+			self.loadpair()
+		else:
+			self.CompPairInd = [[i,j]\
+					for i in range(self.nImg)\
+					for j in range(self.nImg)\
+					if i != j]
+			random.shuffle(self.CompPairInd)
+			f = open('pairs.txt','w')
+			f.write('Pairs:%s\n' %(self.PairLen))
+			for j in range(self.PairLen):
+				f.write(str(self.CompPairInd[j][0]) + ' ' \
+						+ str(self.CompPairInd[j][1]) + '\n')
+	def loadpair(self):
+		f = open('pairs.txt','r')
+		data = f.readlines()
+		f.close()
+		PairNum = int(data[0][:-1].split(':')[1])	
+		for j in range(PairNum):
+			ind = data[j+1][:-1].split(' ')
+			self.CompPairInd.append([int(ind[0]),int(ind[1])])
+	def Aqi2Level(self,aqi):
+		if aqi > 300:
+			level = 6
+		elif aqi > 200:
+			level = 5
+		else:
+			level = (aqi-1)//50 + 1
+		return level
+
+
 class Btn(QtGui.QPushButton):
 	"""
 		Btn class inherit frome QPushButton
@@ -77,18 +107,38 @@ class Btn(QtGui.QPushButton):
 	def emitBtnClicked(self):
 		self.BtnClicked.emit(self.__id)
 
-class ExofClass(QtGui.QWidget):  # inherit QtGui.QWidget
+class ExofClass(QtGui.QWidget):
 	def __init__(self, folder):
 		super(ExofClass, self).__init__()
+		# Correcct Classification number
+		self.CorEsted = 0
+		# All Classfication number
+		self.SumEsted = 0
+
+		self.userParam = {}
+		self.userParam['Folder'] = folder
+		# file path for save remaining
+		self.userParam['Remain'] = \
+				os.path.join(folder,'ex_1_left.txt')
+		# file path for save result
+		self.userParam['FilePath'] = \
+				os.path.join(folder,'ex_1.txt')
+		"""
+			load data
+			if has remaining road remaining
+			otherwise generate new data
+		"""
 		self.Images = ImageData('images')
-		# the current image  and label
+		if os.path.exists(self.userParam['Remain']):
+			self.LoadRemainData()
+		else:
+			self.Images.initParameters()
+		# the current image and label
 		self.curImage = ''
 		self.pixelmapLabel = ''
-		# Correcct Classification
-		self.CorEsted = 0
-		# All Classfication
-		self.SumEsted = 0
+		# initialize the GUI
 		self.initUI()
+		# show next iamge
 		self.nextImage()
 
 	def initUI(self):
@@ -108,15 +158,6 @@ class ExofClass(QtGui.QWidget):  # inherit QtGui.QWidget
 		self.btnLevel4.BtnClicked.connect(self.saveDecision)
 		self.btnLevel5.BtnClicked.connect(self.saveDecision)
 		self.btnLevel6.BtnClicked.connect(self.saveDecision)
-		# Show Accuracy Btn
-		Check = QtGui.QPushButton(_fromUtf8("ShowAccuracy"), self)
-		Check.clicked.connect(self.ShowAccuracy)
-		# Load Remain Data Btn
-		Load = QtGui.QPushButton('Load Remian Data', self)
-		Load.clicked.connect(self.LoadRemainData)
-		# Set Layout
-		grid = QtGui.QGridLayout()
-		self.setLayout(grid)
 		# Level Btns Group
 		hbox = QtGui.QHBoxLayout()
 		hbox.addWidget(self.btnLevel1)
@@ -126,58 +167,105 @@ class ExofClass(QtGui.QWidget):  # inherit QtGui.QWidget
 		hbox.addWidget(self.btnLevel5)
 		hbox.addWidget(self.btnLevel6)
 		vbox = QtGui.QVBoxLayout()
-		vbox.addStretch(1)
+		#vbox.addStretch(1)
 		vbox.addLayout(hbox)
-		vbox.addStretch(1)
-		grid.addLayout(vbox, 1, 0)
+		#vbox.addStretch(1)
+		# Show Accuracy Btn
+		self.Check = QtGui.QPushButton(_fromUtf8("ShowAccuracy"), self)
+		self.Check.clicked.connect(self.ShowAccuracy)
+		self.Check.hide()
+		# Load Remain Data Btn
+		#Load = QtGui.QPushButton('Load Remian Data', self)
+		#Load.clicked.connect(self.LoadRemainData)
+		# label
+		self.RemainLabel = QtGui.QLabel('')
+		self.RemainLabel.setText('Number Remaing:%d'\
+						%len(self.Images.imlist))
+		# Set Layout
+		grid = QtGui.QGridLayout()
+		self.setLayout(grid)
 		# Image Layout
 		self.pixelmapLabel = self.createPixmapLabel()
 		grid.addWidget(self.pixelmapLabel, 0, 0)
-		# Other Btns
-		grid.addWidget(Check, 2, 0)
-		grid.addWidget(Load, 3, 0, 1, -1)
+		#  Btns and Label
+		grid.addWidget(self.RemainLabel, 1, 0)
+		grid.addLayout(vbox, 2, 0)
+		hbox = QtGui.QHBoxLayout()
+		hbox.addStretch(1)
+		hbox.addWidget(self.Check)
+		hbox.addStretch(1)
+		grid.addLayout(hbox, 3, 0)
+		#grid.addWidget(Load, 3, 0, 1, -1)
 
 	def saveDecision(self, level):
-		self.CorEsted = (self.CorEsted + 1) if level == self.curLevel else self.CorEsted
-		self.SumEsted += 1
-		# write the decision in file result\ex_1.txt
-		# with format : image_name + decision
-		if os.path.isdir('result') == False:
-			os.mkdir('result')
-		with open('result\ex_1.txt','a') as f:
-			f.write(self.curImage + ' ' + str(level) + '\n')
-		self.nextImage()
+		# decision made pop out image
+		if len(self.Images.imlist) == 0:
+			QtGui.QMessageBox.information(self, "Finished", "No more image" )
+			self.ShowAccuracy()
+			self.Check.show()
+		else:
+			self.Images.imlist.pop()
+			self.Images.Level.pop()
+			# left number of images
+			self.RemainLabel.setText('Number Remaing:%d'\
+							%len(self.Images.imlist))
+			# if made a right decision
+			self.CorEsted = (self.CorEsted + 1) if level == self.curLevel else self.CorEsted
+			self.SumEsted += 1
+			# save the decision
+			with open(self.userParam['FilePath'],'a') as f:
+				f.write(self.curImage + ' ' + str(level) + '\n')
+			# show next image
+			self.nextImage()
+
 
 	def LoadRemainData(self):
-		"""Load the Remaing Data havent been judged"""
-		f = open('result\ex_1_left.txt','r')
+		"""
+			Load the Remaing Data havent been judged
+			Data Format:
+			------------------
+			Left Images of Ex_1
+			Image Number:
+			CorEsted,SumEsted
+			image1
+			image2
+			...
+			----------------
+		"""
+
+		f = open(self.userParam['Remain'],'r')
 		data = f.readlines()
 		f.close()
 		# before load, clear the previous data 
 		self.Images.nImg = int(data[1][:-1].split(':')[1])
+		self.CorEsted = int(data[2].split(',')[0])
+		self.SumEsted = int(data[2].split(',')[1])
 		self.Images.imlist = []
 		self.Images.AQI = []
 		self.Images.Level = []
-		# read
+		# read file
 		for i in range(self.Images.nImg):
-			ImageName = data[i+2][:-1]
+			ImageName = data[i+3][:-1]
 			self.Images.imlist.append(ImageName)
 			ind_first = ImageName.find('-')
 			ind_second = ImageName.find('-',ind_first+1)
 			aqi = int(ImageName[ind_first+1:ind_second])
 			self.Images.AQI.append(aqi)
 			self.Images.Level.append(6 if aqi > 300 else aqi//50+1)		
-		QtGui.QMessageBox.information(self, "Load Remaing Data", "Load Successfully")
-		self.nextImage()
+		#QtGui.QMessageBox.information(self, "Load Remaing Data", "Load Successfully")
+
+
 	def nextImage(self):
-		if len(self.Images.imlist) == 0:
-			QtGui.QMessageBox.information(self, "Finished", "No more image" )
-		else:
-			# get the image and level
-			self.curImage = self.Images.imlist.pop()
-			self.curLevel = self.Images.Level.pop()
+		if len(self.Images.imlist) != 0:
+			# get the last image and level
+			self.curImage = self.Images.imlist[-1]
+			self.curLevel = self.Images.Level[-1]
 			# do show
-			pixmap = QtGui.QPixmap(os.path.join(self.Images.image_folder, self.curImage))
+			pixmap = QtGui.QPixmap(\
+					os.path.join(self.Images.image_folder, self.curImage))
+			self.pixelmapLabel.setPixmap(pixmap)
+		else:
+			pixmap = QtGui.QPixmap('')
 			self.pixelmapLabel.setPixmap(pixmap)
 
 	def ShowAccuracy(self):
@@ -188,47 +276,59 @@ class ExofClass(QtGui.QWidget):  # inherit QtGui.QWidget
 						%(acc*100,self.CorEsted,self.SumEsted))
 
 	def closeEvent(self, event):
-		if len(self.Images.imlist) != 0:
-			reply = QtGui.QMessageBox.question(self, 'Message',
-				"You Are you sure to quit? Remaing %d image(s)." \
-				%len(self.Images.imlist), \
-				QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-			if reply == QtGui.QMessageBox.Yes:
-				with open('result\ex_1_left.txt','w') as f:
-					f.write('Left Images of Ex_1\nImage Number:%d\n' \
-						%len(self.Images.imlist))
-					for im in self.Images.imlist:
-						f.write(im + '\n')
-				event.accept()
-			else:
-				event.ignore()
+		"""Save the Remaining"""
+		with open(self.userParam['Remain'],'w') as f:
+			f.write('Left Images of Ex_1\nImage Number:%d\n%d,%d\n' \
+				%(len(self.Images.imlist),self.CorEsted,self.SumEsted))
+			for im in self.Images.imlist:
+				f.write(im + '\n')
+		self.close()
+
 
 	def createPixmapLabel(self):
 		"""Creat an empty pixmap label"""
 		label = QtGui.QLabel()
   		label.setEnabled(True)
-  		label.setScaledContents(True)
-  		label.setAlignment(QtCore.Qt.AlignCenter)
-  		label.setFrameShape(QtGui.QFrame.Box)
+  		#label.setScaledContents(True)
+  		label.setAlignment(QtCore.Qt.AlignJustify)
   		label.setSizePolicy(QtGui.QSizePolicy.Expanding,
   		        QtGui.QSizePolicy.Expanding)
   		label.setBackgroundRole(QtGui.QPalette.Base)
   		label.setAutoFillBackground(True)
-  		label.setMinimumSize(420,420)
+  		label.setMinimumSize(624,468)
   		return label
 
 class ExofComp(QtGui.QWidget):  # inherit QtGui.QWidget
 	def __init__(self, folder):
 		super(ExofComp, self).__init__()
+		self.CorEsted = 0
+		self.SumEsted = 0		
+		self.userParam = {}
+		self.userParam['Folder'] = folder
+		# file path for save remaining
+		self.userParam['Remain'] = \
+				os.path.join(folder,'ex_2_left.txt')
+		# file path for save result
+		self.userParam['FilePath'] = \
+				os.path.join(folder,'ex_2.txt')
+		"""
+			load data
+			if has remaining road remaining
+			otherwise generate new data
+		"""
 		self.Images = ImageData('images')
+		if os.path.exists(self.userParam['Remain']):
+			self.LoadRemainData()
+		else:
+			self.Images.initParameters()
+
 		self.CompImagesNum = 2
 		self.pixelmapLabels = []
 		# current pair of image names
 		self.curPair = []
 		# current pair of image index
 		self.curInds = []
-		self.CorEsted = 0
-		self.SumEsted = 0
+
 		self.initUI()
 		self.nextPair()
 
@@ -241,78 +341,122 @@ class ExofComp(QtGui.QWidget):  # inherit QtGui.QWidget
 		self.btnA.BtnClicked.connect(self.saveDecision)
 		self.btnB.BtnClicked.connect(self.saveDecision)
 		# check and load
-		Check = QtGui.QPushButton(_fromUtf8("ShowAccuracy"), self)
-		Check.clicked.connect(self.ShowAccuracy)
-		Load = QtGui.QPushButton('Load Remian Data', self)
-		Load.clicked.connect(self.LoadRemainData)
+		self.Check = QtGui.QPushButton(_fromUtf8("ShowAccuracy"), self)
+		self.Check.clicked.connect(self.ShowAccuracy)
+		self.Check.hide()
+		#Load = QtGui.QPushButton('Load Remian Data', self)
+		#Load.clicked.connect(self.LoadRemainData)
+		self.RemainLabel = QtGui.QLabel('')
+		self.RemainLabel.setText('Number Remaing:%d'\
+						%len(self.Images.CompPairInd))		
 		# set layout
 		grid = QtGui.QGridLayout()
 		self.setLayout(grid)
 		for i in range(self.CompImagesNum):
 			self.pixelmapLabels.append(self.createPixmapLabel())
 			grid.addWidget(self.pixelmapLabels[i], 0, i)
-		grid.addWidget(self.btnA, 1, 0)
-		grid.addWidget(self.btnB, 1, 1)
-		grid.addWidget(Check, 2, 0, 1, -1)
-		grid.addWidget(Load, 3, 0, 1, -1)
+		#Layout of button A
+		hboxA = QtGui.QHBoxLayout()
+		hboxA.addStretch(1)
+		hboxA.addWidget(self.btnA)
+		hboxA.addStretch(1)
+		#Layout of button B
+		hboxB = QtGui.QHBoxLayout()
+		hboxB.addStretch(1)
+		hboxB.addWidget(self.btnB)
+		hboxB.addStretch(1)
+		grid.addLayout(hboxA, 2, 0)
+		grid.addLayout(hboxB, 2, 1)
+		grid.addWidget(self.RemainLabel, 1, 0, 1, -1)
+		#Layout of button Check
+		hboxCheck = QtGui.QHBoxLayout()
+		hboxCheck.addStretch(1)
+		hboxCheck.addWidget(self.Check)
+		hboxCheck.addStretch(1)
+		grid.addLayout(hboxCheck, 3, 0, 1, -1)
+		#grid.addWidget(Load, 3, 0, 1, -1)
 		
 	def saveDecision(self, t):
-		if self.Images.AQI[self.curInds[t]] < self.Images.AQI[self.curInds[t-1]]:
-			self.CorEsted += 1
-		self.SumEsted += 1
-		if os.path.isdir('result') == False:
-			os.mkdir('result')
-		with open('result\ex_2.txt','a') as f:
-			f.write(self.curPair[0] + ' ' + self.curPair[1] + ' ' + str(t) + '\n')
-		self.nextPair()
+		if len(self.Images.CompPairInd) == 0:
+			QtGui.QMessageBox.information(self, "Finished", "No more image" )
+			#self.ShowAccuracy()
+			self.Check.show()
+		else:
+			self.Images.CompPairInd.pop()
+			self.RemainLabel.setText('Number Remaing:%d'\
+							%len(self.Images.CompPairInd))
+			if self.Images.AQI[self.curInds[t]] < self.Images.AQI[self.curInds[t-1]]:
+				self.CorEsted += 1
+			self.SumEsted += 1
+			with open(self.userParam['FilePath'],'a') as f:
+				f.write(self.curPair[0] + ' ' + self.curPair[1] + ' ' + str(t) + '\n')
+			self.nextPair()
 
 	def ShowAccuracy(self):
-		acc = 0 if self.SumEsted == 0 else (self.CorEsted + 0.0)/self.SumEsted
-		QtGui.QMessageBox.information(self, "Accuracy", "The Accuracy is %.2f%%(%d/%d)"\
-						%(acc*100,self.CorEsted,self.SumEsted))
+		acc = 0 if self.SumEsted == 0 \
+				else (self.CorEsted + 0.0)/self.SumEsted
+		QtGui.QMessageBox.information(\
+					self, "Accuracy", \
+					"The Accuracy is %.2f%%(%d/%d)"\
+					%(acc*100,self.CorEsted,self.SumEsted))
 
 	def nextPair(self):
-		if len(self.Images.CompPairInd) == 0:
-			QtGui.QMessageBox.information(self, "Finish", "The test is finished")
-		else:
-			# get the indexs and images
-			self.curInds = self.Images.CompPairInd.pop()
+		if len(self.Images.CompPairInd) != 0:
+			self.curInds = self.Images.CompPairInd[-1]
 			nextPairImages = []
 			for i in range(self.CompImagesNum):
 				nextPairImages.append(self.Images.imlist[self.curInds[i]])
-				pixmap = QtGui.QPixmap(os.path.join(self.Images.image_folder,\
+				pixmap = QtGui.QPixmap(\
+							os.path.join(self.Images.image_folder,\
 							nextPairImages[i]))
 				self.pixelmapLabels[i].setPixmap(pixmap)
 			self.curPair = nextPairImages
+		else:
+			pixmap = QtGui.QPixmap('')
+			self.pixelmapLabels[0].setPixmap(pixmap)
+			self.pixelmapLabels[1].setPixmap(pixmap)		
 
 	def closeEvent(self, event):
-		if len(self.Images.CompPairInd) != 0:
-			reply = QtGui.QMessageBox.question(self, 'Message',
-				"Are you sure to quit?", QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-			if reply == QtGui.QMessageBox.Yes:
-				with open('result\ex_2_left.txt','w') as f:
-					f.write('Left Image Pairs of Ex_2:\nImage Number:%d\nPairs:%s\n'\
-						%(self.Images.nImg,len(self.Images.CompPairInd)))
-					for im in self.Images.imlist:
-						f.write(im + '\n')
-					for Inds in self.Images.CompPairInd:
-						f.write(str(Inds[0]) + ' ' + str(Inds[1]) + '\n')
-				event.accept()
-			else:
-				event.ignore()
+		with open(self.userParam['Remain'],'w') as f:
+			f.write('Left Image Pairs of Ex_2:\nImage Number:%d\nPairs:%s\n%d,%d\n'\
+					%(self.Images.nImg,\
+					len(self.Images.CompPairInd),\
+					self.CorEsted,self.SumEsted))
+			for im in self.Images.imlist:
+				f.write(im + '\n')
+			for Inds in self.Images.CompPairInd:
+				f.write(str(Inds[0]) + ' ' + str(Inds[1]) + '\n')
+
 
 	def LoadRemainData(self):
-		f = open('result\ex_2_left.txt','r')
+		"""
+			Load the Remaing Data havent been judged
+			Data Format:
+			------------------
+			Left Images Pairs of Ex_2
+			Image Number:
+			Pairs:
+			CorEsted,SumEsted
+			image0
+			image2
+			...
+			pair0
+			pair1
+			----------------
+		"""
+		f = open(self.userParam['Remain'],'r')
 		data = f.readlines()
 		f.close()
 		self.Images.nImg = int(data[1][:-1].split(':')[1])
 		PairNum = int(data[2][:-1].split(':')[1])
+		self.CorEsted = int(data[3].split(',')[0])
+		self.SumEsted = int(data[3].split(',')[1])
 		self.Images.imlist = []
 		self.Images.AQI = []
 		self.Images.Level = []
 		self.Images.CompPairInd =[]
 		for i in range(self.Images.nImg):
-			ImageName = data[i+3][:-1]
+			ImageName = data[i+4][:-1]
 			self.Images.imlist.append(ImageName)
 			ind_first = ImageName.find('-')
 			ind_second = ImageName.find('-',ind_first+1)
@@ -320,20 +464,92 @@ class ExofComp(QtGui.QWidget):  # inherit QtGui.QWidget
 			self.Images.AQI.append(aqi)
 			self.Images.Level.append(6 if aqi > 300 else aqi//50+1)		
 		for j in range(PairNum):
-			ind = data[j+3+self.Images.nImg][:-1].split(' ')
+			ind = data[j+4+self.Images.nImg][:-1].split(' ')
 			self.Images.CompPairInd.append([int(ind[0]),int(ind[1])])
-		self.nextPair()
 
 	def createPixmapLabel(self):		
 		label = QtGui.QLabel()
-		label.setEnabled(True)
-		label.setScaledContents(True)
-		label.setAlignment(QtCore.Qt.AlignCenter)
-		#label.setFrameShape(QtGui.QFrame.Box)
-		#label.setSizePolicy(QtGui.QSizePolicy.Expanding,
-		#        QtGui.QSizePolicy.Expanding)
-		label.setBackgroundRole(QtGui.QPalette.Base)
-		#label.setAutoFillBackground(True)
-		#label.setMinimumSize(420,420)
+  		label.setEnabled(True)
+  		#label.setScaledContents(True)
+  		label.setAlignment(QtCore.Qt.AlignJustify)
+  		label.setSizePolicy(QtGui.QSizePolicy.Expanding,
+  		        QtGui.QSizePolicy.Expanding)
+  		label.setBackgroundRole(QtGui.QPalette.Base)
+  		label.setAutoFillBackground(True)
+  		label.setMinimumSize(624,468)
+  		return label
 
-		return label
+
+class Extra(QtGui.QDialog):
+	def __init__(self):
+		super(Extra, self).__init__()
+		self.imlist = [im \
+			for im in os.listdir('example') \
+			if im.endswith('.jpg')]
+		self.curImage = ''
+		self.pixelmapLabel = ''
+		self.initUI()
+		#self.nextImage()
+	def initUI(self):
+		self.setWindowTitle(_fromUtf8("Example"))
+		self.setWindowIcon(QtGui.QIcon('icons/idle.ico'))
+		self.Label = QtGui.QLabel()
+		# Image Layout
+		self.pixelmapLabel = self.createLabel()
+		self.pixelmapLabel.setText("These will be some Examples and Explanation Beforehead:\n" +\
+							"Level 1 = AQI: 0-50\n" + \
+							"Level 2 = AQI: 51-100\n" + \
+							"Level 3 = AQI: 101-150\n" + \
+							"Level 4 = AQI: 151-200\n" + \
+							"Level 5 = AQI: 201-300\n" + \
+							"Level 6 = AQI > 300\n")
+
+		btn_next = QtGui.QPushButton('Show Next Example', self)
+		btn_next.clicked.connect(self.nextImage)
+		btn_skip = QtGui.QPushButton('Skip', self)
+		btn_skip.clicked.connect(self.close)
+		# Set Layout
+		grid = QtGui.QGridLayout()
+		self.setLayout(grid)
+		grid.addWidget(self.pixelmapLabel, 0, 0)
+		#  Btns and Label
+		grid.addWidget(self.Label, 1, 0)
+		hbox = QtGui.QHBoxLayout()
+		hbox.addWidget(btn_next)
+		hbox.addWidget(btn_skip)
+		grid.addLayout(hbox, 2, 0)
+	def createLabel(self):
+		"""Creat an empty pixmap label"""
+		label = QtGui.QLabel()
+  		label.setEnabled(True)
+  		#label.setScaledContents(True)
+  		label.setAlignment(QtCore.Qt.AlignJustify)
+		label.setFont(QtGui.QFont("Roman times",15,QtGui.QFont.Bold))
+  		label.setSizePolicy(QtGui.QSizePolicy.Expanding,
+  		        QtGui.QSizePolicy.Expanding)
+  		label.setBackgroundRole(QtGui.QPalette.Base)
+  		label.setAutoFillBackground(True)
+  		label.setMinimumSize(624,468)
+  		return label
+	def nextImage(self):
+		if len(self.imlist) != 0:
+			# get the last image and level
+			self.curImage = self.imlist.pop()
+			ind_first = self.curImage.find('-')
+			ind_second = self.curImage.find('-',ind_first+1)
+			aqi = int(self.curImage[ind_first+1:ind_second])
+			# do show
+			pixmap = QtGui.QPixmap(\
+					os.path.join('example', self.curImage))
+			self.pixelmapLabel.setPixmap(pixmap)
+			self.Label.setText("AQI:%d,Level:%d"%(aqi,self.Aqi2Level(aqi)))
+		else:
+			self.Label.setText("No More Example!")
+	def Aqi2Level(self,aqi):
+		if aqi > 300:
+			level = 6
+		elif aqi > 200:
+			level = 5
+		else:
+			level = (aqi-1)//50 + 1
+		return level

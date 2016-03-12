@@ -28,6 +28,7 @@ slprj/
 
 # pickle file
 *.pickle
-
+# python
+*.pyc
 # txt file
 *.txt

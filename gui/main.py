@@ -4,7 +4,7 @@ import sys
 import os
 import pickle
 from PyQt4 import QtGui, QtCore, Qt
-from experiments import ExofClass, ExofComp
+from experiments import ExofClass, ExofComp, Extra
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -164,6 +164,10 @@ class Window(QtGui.QWidget):  # inherit
 	def __init__(self, username):
 		super(Window, self).__init__()
 		self.__resultFolder = os.path.join('result', username)
+		if not os.path.isdir('result'):
+			os.mkdir('result')
+		if not os.path.isdir(self.__resultFolder):
+			os.mkdir(self.__resultFolder)
 		self.initUI()
 
 	def initUI(self):
@@ -210,9 +214,12 @@ class Window(QtGui.QWidget):  # inherit
 
 	def enter_ex1(self):
 		"Enter experiment 1 "
+		self.extra = Extra()
+		self.extra.show()
+		self.extra.exec_()
 		self.ex1 = ExofClass(self.__resultFolder)
 		self.ex1.show()
-	
+
 	def enter_ex2(self):
 		"Enter experiment 2"
 		self.ex2 = ExofComp(self.__resultFolder)
