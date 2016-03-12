@@ -17,17 +17,16 @@
 slprj/
 # Remove Image
 *.jpg
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 #
 *.out
 # sublime project
 *.sublime*
-=======
+
 # Remove feature file
 *.out
->>>>>>> c4ac5f0d34b81ab2ef6c3e6ab40f55fd8caa41c4
-=======
+
+
 # perl
 *.pl
 # Remove sublime project
@@ -36,4 +35,11 @@ slprj/
 *.out*
 *.scale*
 *.model*
->>>>>>> dev
+
+# pickle file
+*.pickle
+# python
+*.pyc
+# txt file
+*.txt
+

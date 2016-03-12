@@ -4,7 +4,7 @@ import sys
 import os
 import pickle
 from PyQt4 import QtGui, QtCore, Qt
-from experiments import ExofClass, ExofComp
+from experiments import ExofClass, ExofComp, Extra
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -20,23 +20,14 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-class User(object):
-	"""Information of User"""
-	def __init__(self, name):
-		super(User, self).__init__()
-		self.__name = name
-		self.__folder = os.path.join('result', self.__name)
-	def folder(self):
-			return self.__folder
-
 class Login(QtGui.QDialog):
-	UesrnameSignal = QtCore.pyqtSignal(str)
 	def __init__(self):
 		super(Login, self).__init__()
 		self.initUI()
 
 	def initUI(self):
 		self.setWindowTitle('Login')
+		self.setWindowIcon(QtGui.QIcon('icons/idle.ico'))
 		btn_SignIn = QtGui.QPushButton('Sign In')
 		btn_SignUp = QtGui.QPushButton('Sign Up')
 		btn_SignIn.clicked.connect(self.SignIn)
@@ -60,39 +51,46 @@ class Login(QtGui.QDialog):
 		grid.addLayout(hbox, 4, 0)
 		self.setLayout(grid)
 	def SignIn(self):
+		# read username and password
 		UserSet = {}
-		if os.path.isdir('users.pickle'):
+		if os.path.exists('users.pickle'):
 			with open('users.pickle','rb') as f:
-				UserSet = pickle.load(f)		
-		username = self.name.text()
+				UserSet = pickle.load(f)
+		username = str(self.name.text())
+		# if username exists with right password
+		# accpet and show main window
 		if username not in UserSet:
 			QtGui.QMessageBox.information(self, "SingIn", "Uesrname not exit!")
 			self.name.clear()
 		elif self.password.text() != UserSet[username]:
 			QtGui.QMessageBox.information(self, "SignIn", "Wrong Password!")
-			self.name.clear()
 			self.password.clear()
 		else:
-			self.UesrnameSignal.emit(str(self.name.text()))
+			self.window = Window(username)
+			self.window.show()
 			self.accept()
 	def SignUp(self):
+		# sign up for new user
 		self.hide()
 		signup = Input()
 		signup.show()
 		signup.exec_()
 		self.show()
+		
 
 class Input(QtGui.QDialog):
 	"""Sign Up"""
 	def __init__(self):
 		super(Input, self).__init__()
+		# get the username and password
 		self.__UserSet = {}
-		if os.path.isdir('users.pickle'):
+		if os.path.exists('users.pickle'):
 			with open('users.pickle','rb') as f:
-				self.__UserSet = pickle.load(f)	
+				self.__UserSet = pickle.load(f)
 		self.initUI()
 	def initUI(self):
 		self.setWindowTitle('SignUp')
+		self.setWindowIcon(QtGui.QIcon('icons/idle.ico'))
 		btn_Confirm = QtGui.QPushButton('Confirm')
 		btn_Confirm.clicked.connect(self.Confirm)
 		# labels for name password and confirm password
@@ -137,7 +135,6 @@ class Input(QtGui.QDialog):
 		grid.addLayout(hbox, 6, 0)
 		self.setLayout(grid)
 		# line edits text changed callback
-		print "set layout"
 		self.name.textChanged.connect(self.onChanged)
 		self.password.textChanged.connect(self.onChanged)
 		self.repass.textChanged.connect(self.onChanged)
@@ -153,27 +150,25 @@ class Input(QtGui.QDialog):
 			self.lpassStatu.setText(u'\u2612')
 			self.lrepassStatu.setText(u'\u2612')
 	def Confirm(self):
-		pass
-		"""
-		UserSet = {}
-		if os.path.isdir('users.pickle'):
-			with open('users.pickle','rb') as f:
-				UserSet = pickle.load(f)		
-		username = self.name.text()
-		password = self.password.text()
-		repass = self.repass.text()
-		if username in UserSet:
+		if self.name.text() in self.__UserSet:
+			QtGui.QMessageBox.information(self, "LoginUp", "Name has been used!")
+		elif self.password.text() != self.repass.text():
+			QtGui.QMessageBox.information(self, "LoginUp", "Passwords do not match!")
+		else:
+			self.__UserSet[str(self.name.text())] = str(self.password.text())
+			with open('users.pickle','wb') as f:
+				pickle.dump(self.__UserSet, f)
+			self.accept()
 
-		UserSet[username] = password
-		with open('users.pickle','wb') as f:
-			pickle.dump(UserSet,f)
-		self.accept()
-		"""
 class Window(QtGui.QWidget):  # inherit 
-	def __init__(self):
+	def __init__(self, username):
 		super(Window, self).__init__()
+		self.__resultFolder = os.path.join('result', username)
+		if not os.path.isdir('result'):
+			os.mkdir('result')
+		if not os.path.isdir(self.__resultFolder):
+			os.mkdir(self.__resultFolder)
 		self.initUI()
-
 
 	def initUI(self):
 		self.setWindowTitle('Learn PyQt')
@@ -219,24 +214,18 @@ class Window(QtGui.QWidget):  # inherit
 
 	def enter_ex1(self):
 		"Enter experiment 1 "
-		self.ex1 = ExofClass()
+		self.extra = Extra()
+		self.extra.show()
+		self.extra.exec_()
+		self.ex1 = ExofClass(self.__resultFolder)
 		self.ex1.show()
-	
+
 	def enter_ex2(self):
 		"Enter experiment 2"
-		self.ex2 = ExofComp()
+		self.ex2 = ExofComp(self.__resultFolder)
 		self.ex2.show()
-
-	@QtCore.pyqtSlot(str)
-	def test(self, name):
-		print name
-		pass
 if __name__ == '__main__':
 	app = QtGui.QApplication(sys.argv)
-	window = Window()
 	login = Login()
-	login.UesrnameSignal[str].connect(window.test)
 	login.show()
-	if login.exec_():
-		window.show()
 	sys.exit(app.exec_())
