@@ -41,7 +41,7 @@ class ImageData(object):
 		self.Level = []
 		# the comparison pair of iagmes
 		self.CompPairInd = []
-		self.PairLenRatio = 0.015
+		self.PairLenRatio = 0.01
 		# initialize the imlist and AQI
 		#self.initParameters()
 
@@ -54,7 +54,7 @@ class ImageData(object):
 		# Order disrupted
 		random.shuffle(self.imlist)
 		self.nImg = len(self.imlist)
-		self.PairLen = int(self.PairLenRatio*self.nImg)
+		self.PairLen = int(self.PairLenRatio*self.nImg*self.nImg)
 		self.AQI = []
 		for i in range(self.nImg):
 			# get aqis
@@ -64,6 +64,7 @@ class ImageData(object):
 			self.AQI.append(aqi)
 			self.Level.append(self.Aqi2Level(aqi))
 		if os.path.exists('pairs.txt'):
+			print os.path.exists('pairs.txt')
 			self.loadpair()
 		else:
 			self.CompPairInd = [[i,j]\
@@ -321,7 +322,6 @@ class ExofComp(QtGui.QWidget):  # inherit QtGui.QWidget
 			self.LoadRemainData()
 		else:
 			self.Images.initParameters()
-
 		self.CompImagesNum = 2
 		self.pixelmapLabels = []
 		# current pair of image names
